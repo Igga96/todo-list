@@ -11,15 +11,15 @@
         @click="addNewNote">Добавить</button>
     </div>
     <ul class="v-list__items"
-    v-if="NOTES.length !== 0">
+    v-if="notes.length !== 0">
         <li class="v-list__items-item"
-        v-for="(note, idx) in NOTES"
+        v-for="(note, idx) in notes"
         :key="idx">
         <div>
             <input
         type="text"
         @keypress.enter="editNote"
-        v-model="NOTES[idx]"
+        v-model="notes[idx]"
         v-if="isEditing"
         >
     <span>
@@ -45,10 +45,18 @@ export default {
       title: 'Список дел',
       placeholderString: 'Введите текст',
       inputValue: '',
-      isEditing: false
+      isEditing: false,
+      notes: []
     }
   },
-  props: {
+  mounted () {
+    if (localStorage.getItem('notes')) {
+      try {
+        this.notes = JSON.parse(localStorage.getItem('notes'))
+      } catch (e) {
+        localStorage.removeItem('notes')
+      }
+    }
   },
   computed: {
     ...mapGetters(['NOTES'])
@@ -57,12 +65,18 @@ export default {
     ...mapActions(['REMOVE_NOTE']),
     addNewNote () {
       if (this.inputValue !== '') {
-        this.NOTES.push(this.inputValue)
+        this.notes.push(this.inputValue)
         this.inputValue = ''
+        this.saveNote()
       }
     },
-    removeNote (data) {
-      this.REMOVE_NOTE(data)
+    removeNote (idx) {
+      this.notes.splice(idx, 1)
+      this.saveNote()
+    },
+    saveNote () {
+      const parsed = JSON.stringify(this.notes)
+      localStorage.setItem('notes', parsed)
     },
     showEdit () {
       this.isEditing = true
